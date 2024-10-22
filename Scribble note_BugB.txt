@@ -1,0 +1,422 @@
+Reconnaissance
+
+Google Dorking - https://www.exploit-db.com/google-hacking-database/
+Dorking Search engine -  https://github.com/NitinYadav00/Bug-Bounty-Search-Engine/blob/main/index.html         
+WHOIS and Reverse WHOIS - $ whois facebook.com      https://viewdns.info/reversewhois/
+IP Addresses - $ nslookup facebook.com      ViewDNS.info        whois -h whois.cymru.com 157.240.2.20
+Certificate Parsing - online databases like crt.sh, Censys, and Cert Spotter
+Subdomain Enumeration - Sublist3r, SubBrute, Amass, and Gobuster
+Seclists (For Subdomain enumeration and much more) - https://github.com/danielmiessler/SecLists/
+Service Enumeration - Active & Passive      Nmap & Masscan(active)        Shodan, Censys and Project Sonar(passive)
+Directory Brute-Forcing - Dirsearch or Gobuster     a screenshot tool like EyeWitness (https://github.com/FortyNorthSecurity/EyeWitness/) or Snapper (https://github.com/dxa4481/Snapper/) to automatically verify that a page is hosted on each location.
+Web Spidering - OWASP ZAP & Burp suite (Crawler)
+Aws s3 buckets - https://buckets.grayhatwarfare.com/
+https://chaos.projectdiscovery.io/#/    subdomains found from all the programs in bug bounty platforms
+
+
+nahamsec github repo (bugbounty resource) - https://github.com/nahamsec
+##For subdomain enumeration we can use bbot too https://github.com/blacklanternsecurity/bbot
+##For shodan query tool: uncover https://github.com/projectdiscovery/uncover syntax: uncover -silent -s <shodan query> | sort -u | tee shodan.txt
+##https://github.com/tomnomnom
+tool: surf for ssrf vulnerability finding
+Don't skip the blue page //hackers love iis servers ##we can find critical vulnerabilities inside that.
+##search domain extractor and copy the assets from bugb platforms and paste it & readily find inscope targets
+##trufflehog chrome extension
+##arjun -- url tampering //api testing
+
+
+#######################The power of Recon by Orwa Atyat (https://www.youtube.com/watch?v=yyD8Z5Qar5I)
+Discovering IIS : 1. Nuclei
+                  2. Wappilyzer
+                  3. Shodan -- http.title:"IIS"
+                        Company dork - ssl:"Bsides Ahmedabad Inc" http.title:"IIS"
+                        Host Dork - Ssl.cert.subject.CN:"bsidesahmedabad.in" http.title:"IIS"
+
+Tools for Tesing : 1. IIS Tilde enumeration (Burp Extension)
+                   2. shortscan - to detect short names 
+                   3. JetBrains dotPeek - to analyze files such as dll file and export the source of that file
+                   4. VS code
+                   5. ffuf - web directory bruteforcer
+wordlist - https://github.com/orwagodfather/WordList
+references: https://learn.microsoft.com/en-us/previous-versions/aspnet/zhhddkxy(v=vs.100)
+            https://book.hacktricks.xyz/pentesting-web/deserialization/exploiting-__viewstate-parameter
+            https://github.com/bitquark/shortscan
+            https://www.youtube.com/watch?v=cqM-MdPkaWo
+            https://x.com/ctbbpodcast/status/1688607912434819073
+            https://www.youtube.com/watch?v=HU89u0rQXF4
+            https://www.youtube.com/watch?v=HrJW6Y9kHC4    
+
+
+
+#############403 Bypasses: 
+Url path fuzzing -     /secret -> 403 Forbidden
+                       /secret/ -> 200 OK
+                       /secret/. -> 200 OK
+                       //secret// -> 200 OK
+                       /./secret/./ -> 200 OK
+                       /;/secret -> 200 OK
+                       /.;/secret -> 200 OK
+                       //;//secret//;// -> 200 OK
+                       /secret.json -> 200 OK
+Switching http methods 
+Headers Manipulation - X-ORIGINATING-IP X-FORWARDED-FOR X-FORWARDED FORWARDED-FOR X-REMOTE-IP X-REMOTE-ADDR X-PROXYUSED-IP X-ORIGINAL-URL CLIENT-IP TRUE-CLIENT-IP CLUSTER-CLIENT-IP X-PROXYUSER-IP HOST
+                       X-ORIGINATING-IP:LOCALHOST X-FORWARDED-FOR:LOCALHOST X-ORIGINATING-IP:127.0.0.1 X-FORWARDED-FOR:127.0.0.1 X-FORWARDED-FOR:HTTP://127.0.0.1
+                       Use Burpsuite extension: 403 bypasser
+                       Use cli tools eg: cat targets.txt | httpx -silent -H 'X-Forwarded-For: HTTP://127.0.0.1'  
+Switching ip or using VPN provider- Nordvpn as simple to use 'nordvpn connect United_States'
+
+
+Command to grep: grep -oP '^https?://(?:[^/]*/){3}' gau.txt ##change 3 to 2 to filter the results again
+grep -oP '^https?://(?:[^/]*/){3}' gau.txt | sort -u | httpx -mc 200 | tee root-dirs.txt
+##wordlist from the parameters obtained -- cat gau.txt | unfurl keys | sort -u | grep -vE '_|/|\?|\\' > params.txt ##then manually remove which you do not need
+cat gau.txt | grep -E '\.pdf' | sort -u | httpx -mc 200 | tee gau-pdfs.txt ##filtering by extensions
+cat gau.txt | grep -E '\.doc' | sort -u | httpx -mc 200 | tee gau-docs.txt
+cat gau.txt | grep -E '\.xls|\.php|\.asp|\.jsp|\.py|\.rb|\.do|\.action' | sort -u | httpx -mc 200 | tee extensions
+You can again append these with param.txt file and check for any vulnerablities
+cat gau.txt | grep -Ei 'login|register|signup|signin|sign-up|sign-in|dashboard|admin' | httpx -mc 200 | tee auth-endpoints.txt
+
+####################################################
+Example Methodology Tinder
+####################################################
+create a directory naming it tindermindmap.txt and listing the different wildcard attack vectors to that txt file & simultaneously create a wildcard.txt file just listing the wildcards which u want to find bugs
+then using subfinder to find the different subdomains in the list the command : subfinder -dL wildcards.txt -o subfindersubs.txt
+we can use sublist3r also 
+After that use httpx tool to filter the subdomains in a way that only active or alive subdomains are identified command: httpx -sc -ip -title > livesubs.txt
+cat livesubs.txt | grep "200" > 200links.txt
+cat livesubs.txt | grep "403" > 403links.txt
+cat 200links.txt | grep awk '{print $1}' > 200subsok.txt #to print the subdomains titles which returns status code 200
+Then use web crawling tools to the following subdomains such as katana and gau commands:
+katana -u 200subsok.txt -jc > katanaurl.txt
+cat 200subsok.txt | gau --o gaurls.txt
+Then they use waybackurl to find hidden or previously used urls command: cat 200subsok.txt | waybackurls > wayurls.txt
+cat wayurls.txt | anew wayurls2.txt # To remove any repeats and empty lines
+then check the urls in the wayurls.txt file for any potential chances of vulnerabilities
+after that combine the results of katana & gau and waybackurls into single file using sort and anew, command: cat wayurls.txt gaurls.txt katanalurls.txt | sort -u | anew urls.txt
+Then they use the tool paramspider to spider through the 200subsok.txt file command: paramspider -l 200subsok.txt
+Then use dirsearch on the 200subsok.txt command: dirsearch -l 200subsok.txt -o dirs.txt
+
+
+################################ Break ######################################
+
+open . #command to open gui file manager in the current directory
+Don't forget to download Seclists wordlist from github
+Then he ignores the dirsearch and of the subdomains. he might have forgot about the subdomains lets leave it at that.
+Use the urls.txt file and utilize the tool secret finder to find hidden vulnerabilities. (https://github.com/m4ll0k/SecretFinder)
+cat urls.txt | while read url; do secretfinder -i $url -o cli >> secretfinderres.txt; done
+so after setting secretfinder we manualy test the different subdomains and check for any vulnerability from the 200subsok.txt
+curl -I <url>
+httprobe to check whether the urls respond to http or https and add use the corresponding format command: cat gramiosubs.txt | httprobe >> gramiosubsfix.txt
+Assetfinder eg: assetfinder paylution.com -subs-only | anew paylutionsubs.txt
+
+
+
+
+#################################################################################
+                    Example Methodology Paypal
+#################################################################################
+Create a file named wildcards.txt containing the different assets which you want to check
+Assetfinder eg: assetfinder paylution.com -subs-only | anew paylutionsubs.txt
+Subfinder command: subfinder -d paylution.com | anew paylutionsubs.txt   ||  subfinder -dL wildcards.txt -o subfindersubs.txt
+Httpx : cat <allsubdomainfile.txt> | httpx -sc -cl -title | anew livesubs.txt //-cl means content line so if the content line size is huge there is something important inside it
+cat livesubs.txt | sort             #to sort the txt file
+use nikto -h paylution.com 
+use the two spidering tools to crawl through the different subdomains command: cat wwwhyper | gau | anew wwwhypergau.txt //wwwhyper contains the url of the particular domain
+use dirsearch to find the different subsection in the particular subdomain to manualy test command:
+dirsearch -u https://www.hyperwallet.com/ -w ~/Documents/wordlists/../.. | anew dirsearchres.txt
+ffuf -u https://www.hyperwallet.com/
+Then manualy evaluate with each subdomain to find the respective data
+
+
+##############################################################################################
+                        Example Methodology Bookings
+##############################################################################################
+Bigbountyrecon tool //tool used for google dorking
+create a target.txt file with taget domain name //just the domain name eg: bookings.com
+subfinder -dL target.txt --all --recursive -o Subs.txt
+cat Subs.txt | httpx -o AliveSubs.txt
+cat Subs.txt | waybackurls | tee urls.txt
+nuclei -t /nuclei-templetes/takeovers -l Alivesubs.txt
+nuclei -t /nuclei-templetes/fuzzing-templates -l urls.txt
+nuclei -list Alivesubs.txt -t /nuclei-templetes/vulnerabilities -t /nuclei-templates/cves -t /nuclei-templetes/exposures
+cat urls.txt | grep "=" | tee param.txt
+cat urls.txt | grep -iE '.js'|grep -ivE '.json'|sort -u | tee js.txt
+nuclei -t /nuclei-templetes/http/exposures/ -l js.txt -o jsBugs.txt
+cat param.txt | kxss
+paramspider -d bookings.com
+cat urls.txt | uro | gf xss > xss.txt //finding xss vuln
+dalfox file xss.txt  | tee XSSvulnerable.txt //finding xss vuln
+cat AliveSubs.txt | gau | uro | gf lfi | qsreplace "/etc/passwd" | while read url; do curl -silent "$url" | grep  "root:x:" && echo "$url is vulnerable"; done;
+
+cat AliveSubs.txt | gau | uro | gf lfi | tee lfi.txt //Detects LFI patterns in URLs
+nuclei -list target.txt -tags lfi //Detects LFI patterns in URLs
+site="$(cat target.txt)"; gau "$site" | while read url; do target=$(curl -sIH "Origin: https://evil.com" -X GET $url) | if grep 'https://evil.com'; then [Potentional CORS Found] echo $url; else echo Nothing on "$url"; fi; done      //Checks for potential CORS vulnerabilities by sending requests with different origins.
+python3 sqlifinder.py -d domain.com    //Discovers SQL injection vulnerabilities on the domain using SqliFinder.
+sqlmap -m param.txt --batch --random-agent --level 1 | tee sqlmap.txt  //Performs SQL injection testing on parameters.
+cat urls.txt | grep -a -i =http | qsreplace 'evil.com' | while read host do;do curl -s -L $host -I| grep "evil.com" && echo "$host \033[0;31mVulnerable\n" ;done        //Checks for open redirects by replacing URLs with a malicious domain and observing the response.
+
+
+#################################################################################################
+                        Example Methodology Shopify
+#################################################################################################
+
+Create a txt file named wildcards containing the different attack domains
+Assetfinder to find subdomains
+https://www.github.com/tomnomnom/   #different assets for bugbounty
+cat wildcards | assetfinder --subs-only | anew domains
+finddomain -f wildcards | tee -a finddomain.out
+cat domains | httprobe -c 80 --prefer-https | anew hosts
+we need to copy the result from the output and add it to a file called from-finddomain
+cat from-finddomain | anew domains | httprobe -c 50 | anew hosts
+waybackurls Shopifykloud.com | tee -a urls
+check for interesting urls like k8s(kubernets), nginx, apicalls etc
+then uses a wordlist to bruteforce or add to the provided subdomains
+cat ~/recon/master/configfiles
+comb hosts ~/recon/master/configfiles
+comb <(echo https://......) ~/recon/master/configfiles #any interesting subdomain url from the urls file
+comb <(echo https://......) ~/recon/master/configfiles | fff -s 200 -o configfiles -d 5  #finding urls that respond with a code 200
+As he did not get any 200 valid sites he then proceeds to ffuf
+ffuf -w ~/Seclists/Discovery/Web-content/raft-large-files.txt -u https://....../FUZZ
+ffuf -w ~/Seclists/Discovery/Web-content/raft-large-directory.txt -u https://....../FUZZ
+whenever you see a redirect to a different url you can check for a open redirect vulnerability
+waybackrurls --get-versions 'https://www.help.Shopify.com/assets/site.js'
+From a bunch a urls you just need urls which are inscope to attack to do so
+1. Firstly create a inscope file like the manner with likely domains
+            .*\.Shopifykloud\.com$
+            .*\.Shopify\.com$
+            ^Shopifykloud\.com$
+            ^Shopify\.com$
+2. Type in the command: gf urls | inscope
+It filters the urls based on the provided subdomains
+
+Then he check the main domain on a website https://www.threatcrowd.org/  #some of the subdomains in the output may not be accurate
+Then he utilize google dorking eg: site:shopify.com 
+
+
+#################################################################################################
+                        Example Methodology Dell
+#################################################################################################
+
+Firstly he logged into a website named trickiest and is in a public vulnerability disclosure program of Dell
+Then in the search option typed in url ~ dell.com and found different assets related to dell
+He individually selected a single domain and is trying to find vulnerabilities in that one thing
+The domain he selected contains a loginform and trying his methods eg: pgm.dell.com     #iis weblogin Don't disharten when we see a loginform, we should try to abuse it.
+curl https://pjm.dell.com/ -i
+use shortscan command: shortscan https://pjm.dell.com/      #check to see whether its vulnerable
+couldnot get anything so then he checked the reset password section and checked for emails like admin@dell.com and demo@dell.com
+then he went on to another subdomain and tried to work on ffuf command:
+ffuf -w onelistforallshort.txt -u https://billing..............com/Fuzz -ac
+#try to google the url or assets as there are chances that the resource might show some interesting results
+if found any assets based on jira try to persiue that cause there are information disclosures and many vulnerabilities which are published in hackerone
+###In case of any doubts you can refer resources like hacktricks etc
+If u can u can check on request code 302 which is redirect and whether it redirects to itself and any other site which is outside.
+Then he goes on to urls which contains set-cookie which most of them are login pages
+after much searching he goes and finds a page which is able to create an account and otp bypassing is working and the page behaves bit suspicious
+searches for the title or headers which contains Windows or ISS uses shortscan to check the urls
+shortscan <url>     //found a vulnerable link
+
+
+#################################################################################
+                    Example Methodology Etsy https://www.youtube.com/watch?v=X09Q1Uf9PV4
+#################################################################################
+subfinder -d etsy.com -o subdomains.txt
+httpx-toolkit -l ./subdomains.txt -o livedomains.txt
+then he use subzy (tool) to check for subdomain takeover
+command: subzy run --targets livesubdomains.txt //if found vulnerable  refer some youtube videos and manually check whether its possible or not https://github.com/PentestPad/subzy
+katana -u subdomains_alive.txt -d 5 -ps -pss waybackarchive, commoncrawl, alienvault -hf -jc -fx -ef woff, css, png, svg, jpg, woff2, jpeg, gif, svg, -o allurls.txt //using katana to find endpoints
+Then in another tab he uses dirsearch command: 
+        dirsearch -u https://www.etsy.com/ -e conf,config,bak,backup,smpl,oldp,db,sql,asp,aspx,pyk,ryk,rb,php,bap,cache,cgi,conf,html,incon,ar,js,json,jsp,.com,log,rar,old,sql.gzr.sql.zipr.gz,.gz,gz,smp,tar.bz2,tar.gz,txt,wadl,zip,logonxml,js,json
+        //if u find 200 response on the above result manually check on them.
+waymore -i "etsy.com" -n -mode U | gf lfi | sed 's/=.*/=/' | qsreplay "FUZZ" | sort -u | while read urls; do ffuf -u $urls -w ./lfi.txt -c -mr "root:" -v; done //now trying local file inclusion in the particular domain (https://github.com/xnl-h4ck3r/waymore)
+All the automated scannings are still progressing at the time he uses another tool
+        corsy.py //to find cors misconfigurations we can use this tool command: python3 ./corsy.py -i ./livesubdomains.txt
+Then after scanning or getting allurls.txt      cat allurls.txt | grep -E "\.js$" >> js.txt
+After getting the results on jsfile use a nuclei template to scan the jsfile to find secrets or vulnerabilities
+nuclei -l ./treelo.txt -t /nuclei-templates/http/vulnerablities/generic/generic-linux-lfi.yaml -c 30
+
+####################################################
+Example Methodology Tinder https://www.youtube.com/watch?v=rLIq-xB35HY
+####################################################
+nmap -t4 -p 53 --script dns-brute tinder.com
+subfinder -d tinder.com | anew subs.txt
+assetfinder --subs-only tinder.com | anew subs.txt
+amass enum -d "tinder.com" |awk '{print $1}' | anew subs.txt
+curl -s https://crt.sh/\?q\=\test.com\&output\=json | jq -r '.[].name_value' | grep -Po '(\w+\.\w+\.\w+)$'
+gobuster vhost -k --append-domain -u tinder.com -w /usr/share/wordlists/Seclists/Discovery/dns/subdomains-top1million-110000.txt
+nmap --script http-vhosts -p 80,443 --script-args http-vhosts.domain=tesla.com,http-vhosts.filelist=/usr/share/wordlists/Seclists/Discovery/dns/subdomains-top1million-5000.txt www.tesla.com
+httpx -l subs.txt -sc -title
+katana -u https://lite.tinder.com/
+bbot -t tinder.com -p subdomain-enum //very important
+cats subs.txt | aquatone
+open burp suite -> target -> scope add -> <domain_name> tinderops (like that 2/3 more)
+click on the request from main domain ie., https://www.tinder.com path / -> right click select jsminer -> click run js automine(check everything)
+
+
+
+
+
+
+
+General Perspectives of bugbounty
+knockpy - a new tool for subdomain enumeration     command: knockpy -w <wordlist location> domainname
+##a tip try to bruteforce with a workdlist respective to a particular location i.e., eg If an organization is based on dutch, we could try bruteforcing with a dutch based wordlist in Seclist
+##use notion for notetaking and toggle for time tracking
+##an interesting way to find vulnerability is that trademark/copyright based recon for wide targets eg:   Intext:"@Copyright, XYZ1212 Company, 2020" -xyz1212.com
+        copy the copyright word from the website and use the above example
+        you can change the year of the copyright and test it too.   """"Intext:"@Copyright, XYZ1212 Company, 2016" -xyz1212.com"""""
+        Older copyright= Older website = More vulnerabilities
+
+##a secret --- https has a relation with ssl certificates They have a field called 'subject alt names' //so it contains the ssl certificate which contains different/most of the assets it uses.
+            You can use an ip address approach to find the different targets:   bgp.he.net(asn search) -> asnl lookup (asn to ip blocks) -> automate the last part using python etc
+            By doing this you can find different subdomains that are fresh targets 
+
+##example--  wikipedia TARGET.com 
+            went to the wikipedia page and found the list of aquisitions by target 
+            he found a seed controled by the same company eg: TARGETabcd.com
+            cat subs.txt | httpx -title -status-code -content-length -follow-redirects
+            from the o/p of subfinder + httpx found a subdomain having extension index.jsp
+            upon going to the site found a loginpage started testing for sqli, xss, code injection and tried few default credentials and didn't find anything but didnot stop
+            captured the request on burpsuite and tested for anything sus. simultaneously he sent that request to sqlmap for testing and continued to check the request and found a the word "token" on the request
+            somesort of token exchange is happening in the backend, he further checked the proper flow of the request
+                    https://a2a.TARGET.com/a2a/../a2a_token (POST request to here) -> https://a2ahs.TARGET.com (fetch auth token from here) -> https://a2ahs.TARGET.com (if authtoken valid, login successful)
+            https://a2a.TARGET.com/a2a/../a2a_token
+            https://a2a.TARGET.com/a2ahs/  ##he then changed directory to a2ahs and checked it. and found a login page in that particular domain and found it a bit old, and felt it was vulnerable to sqlinjection vulnerability
+            upon checking with single quotes(') i.e., userid=test'&password=test'&org=sthg ///he got responce as a 500 internal error so theres increased chance for a sql injection
+            His normal prompts didn't work so he copied and put it in sqlmap
+
+##Infosecwriteup Conference (Jason Haddix)
+        ASN enumeration -- To enumerate the wide scope of a particular company hurricane electronics https://bgp.he.net/ eg: search twitch -> prefix v4
+        ASN -> Port Scanner -- Naabu offers the most usable port scanner out there 
+                echo AS394161 | asnmap -silent  | naabu -silent
+                echo AS394161 | asnmap -silent  | naabu -silent -nmap-cli 'nmap -sV'
+                Passive Port Scan (SMAP) -- smap is a port scanner build with the free api of shodan.io's  //great for redteamers who doesn't want to make a lot of noise
+        Cloud Recon -- we will be using ssl certificate enumeration to find subdomains of the targets. this can yield apex domains & internal domain names
+                        certificate fields gives info on Common Name, Organization, Subject Alt Name
+                        tool: Cloud Recon https://github.com/g0ldencybersec/cloudrecon //It will scan the entire cloud range in 2 hours
+                        get the ip ranges to scrape from https://github.com/lord-alfred/ipranges/blob/main/all/ipv4_merged.txt
+                        cloudrecon scrape <ipv4_merged txt file> // we will get a txt file containg the ip information from the domain names & their subdomains
+                        cat <scrape_txt_file> | grep 'twitch.tv'
+                        grep -F '.twitch.tv' 12_11_2023_DB.txt | awk -F'[][]' '{print $2}' | sed 's# #\n#g' | grep ".twitch.tv" | sort -fu | cut -d ',' -f1 | sort -u   ##parse our subs
+                        grep -F '.twitch.tv' 12_11_2023_DB.txt | awk -F'[][]' '{print $2}' | sed 's# #\n#g' | sort -fu | cut -d ',' -f1 | sort -u       ##This is used to gather all the subdomain which contains twitch.tv in it including apex domains etc
+                        prips 23.160.0.0/24 | hackip2host //it ripes up each individual ip and map it domain name & retrieve data through reversedns
+        Cloud Recon Backup -- https://kaeferjaeger.gay/ the hacker collective scans all the cloud providers every week and pull down every ips ssl data, we can download
+        and use data for our target.
+                                https://kaeferjaeger.gay/?dir=sni-ip-ranges/amazon
+        Shodan++ -- shodan will give us passive subdomains, IP Addresses, vulnerability data, and more
+                    manual shodan cheatsheet by cyber writes is really good. But it might require authentication https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTTuumEwI653_63QkwxNoJqRNEBuax8MM5T-qPS0qVDxHdR2uNcOoC8WYaAOg&s
+                    Automated Shodan - tool: Karma v2. Karma has a builtin dork file which contains all the dorking queries called fingerprint. we can add our own dorking templates inside it.
+                    Shosubgo -- subdomain enumeration using shodan (these standalone tools provide more results due to their narrow focus. ie., 3-10% increased Discovery)
+                    
+        Other Shodan resources -- web interface is useful for small to intermediate scale research
+                                  Shodan cli is better for large scale projects (shodan CLI >>> web interface)
+                                  Asset Discovery with shodan cli nahamsec youtube video https://www.youtube.com/watch?v=4CL_8GRNVTE 
+                                  find shodan dorks from the internet where people use and mainly use linkedin or twitter to find newly found vulnerabilities and change it into a shodan dork and add it to the signature
+                                  jsluice - jsluice is a Go package and command-line tool for extracting URLs, paths, secrets, and other interesting data from JavaScript source code.
+                                                  https://x.com/Jayesh25_/status/1738492661969912114
+        Autodiscover Interrogation (check_mdi.py) -- python3 check_mdi.py -d tesla.com
+        Subdomain Scraping 1. Amass
+                           2. Subfinder
+                           3. BBOT
+        Github Enumeration -- Githubsubdomains (automation tool) requires around 3 api keys to work
+                                        github-subdomains -d dell.com -t <tokens> -o githubdell10.txt
+                              Manual appraoach using github dorks - https://gist.github.com/jhaddix/2a08178b94e2fb37ca2bb47b25bcaed1
+
+        CVE's & Misconfigurations -- nuclei scanner - nuclei -l tesla_httprobe.txt -t brute-force/* -t cves/* -t basic-detections/* -t dns/* -t files/* -t security-misconfiguration/* -t subdomain-takeover/* -t tecnologies/* -t token/* -t vulnerabilities/* 
+                                     gofingerprint
+
+        Secrets of automation-kings in bug bounty (telegram group or bot) check or confirm
+
+        Content Discovery -- https://wordlists.assetnote.io
+                             1. tech 
+                             2. oss tool:source2url 
+                             3. custom  https://github.com/0xDexter0us/Scavenger
+                             4. Historical tool: gau , waymore
+                             If you find 401 responce you have to check its subdomain and try to bruteforce it and comapre it with waybackurl to check if there were any authentication before
+                             like that eagerly check for things in 401 errors
+        Application Analysis -- spidering cli           Tools: Gospider & Hackcrawler
+                                Javascript  //Javascript Parcing - a form of content discovery 
+                                        Tool:xnlinkfinder https://github.com/xnl-h4ck3r/xnLinkFinder syntax: python3 xnlinkfinder.py -i tesla.com -v -d 2 -sp https://www.tesla.com
+                                        Burp extension: GAP https://github.com/xnl-h4ck3r/GAP-Burp-Extension
+
+
+###shodan search ssl.cert.subject.CN:"target.com" 200 --fields ip_str | httpx | tee shodan.txt
+###cat shodan.txt | aquatone
+###slurp - s3 bucket enumeration command:./slurp domain -p permutations.json -t pentagon.mil
+###social hunter - broken links for instagram,twitter etc
+nuclei -l alive.txt -severity unknown,low,medium,high,critical -etags "intrusive"
+https://dnsdumpster.com - dnsdumpster
+bucket flaws - https://github.com/nikhil1232/Bucket-Flaws -- continuation to slurp from the results gathered through slurp
+
+
+
+########################################################################################################################################################3
+        Top-Tier Bug Bounty Hunter Mindset - Yassine Aboukir KEYNOTE at BSides Ahmedabad 2022 (https://www.youtube.com/watch?v=QhpqBnu5MXo)
+########################################################################################################################################################
+Aim for high critical vulnerabilities as they are more payed and less chance of duplication
+Reconnaissance is not only subdomain Enumeration**
+automated/manual spidering the web Application for visualization of assets and functionalities (burpsuite sitemap)
+expand the attck surface such as decompiling mobile Applications, browser extensions, desktop apps for interesting livedomains
+        Indepth Reconnaissance - jsfiles contains a wealth of info such as endpoints, hardcoded credentials, expired domain name, post message misconfigurations, etc.,
+                                  Go to burpsuite and filter js files from the traffic and push it to linkfinder to scrap everything in those files and you have manually inspect this
+                                  eg scenario : endpoint for a new feature found in a jsfile /partner-connect?usecase=entertainment&path=/ 
+                                                when navigated it redirects to https://entertainment.redacted.com/?assertion=eyJibmMi<accesstoken>
+                                                path was vulnerable to open redirect which results in leaking users access token
+                                                navigating to /partner-connect?usecase=entertainment&path=.example.com results in https://entertainment.redacted.com.example.com/?assertion=eyJibmMi<accesstoken>
+                                  Enumerating hidden HTTP parameters and request headers ##Burpsuite extensions USE param miner -> Guess params -> Guess everything!
+                                                                                                                400 bypasser
+                                                                                                                Autorize
+                                                                                                                Turbo Intruder
+Security Impact is crutial in case of finding a low hanging vuln such as xss increase its impact to create high pay
+No impact no bug
+Think outside the box and come up with creative ideas
+Attcker KB
+https://github.com/punk-security/dnsReaper 
+https://github.com/gotr00t0day/valhalla
+
+
+####################################################
+spyhunt -- python3 spyhunt.py -s zdev.net --save zdevsubs
+           python3 spyhunt.py --probe zdevsubs --save goodzdevsubs
+paramspider -l ~/Tools/spyhunt/goodzdevsubs
+python3 spyhunt.py -javascript <domain_url>
+####################################################
+
+########################################################################################################################################################3
+        The bug hunters Methodology full 2 hour training by Jason Haddix(https://www.youtube.com/watch?v=uKWu6yhnhbQ)
+########################################################################################################################################################
+////////the video is a bit old around 4 years but we could use different resources which are still applicable
+Slides - https://drive.google.com/file/d/1aG_qqRvNW-s5_8vvPk5rJiMSMeNL2uY9/view
+Crunch roll to find the different acquisitions
+OWASP Amass - command: amass intel --asn 14898
+Linked Discovery - Using Burpsuite to manually crawl our target domains
+Extensions: Burp Jslinkfinder
+            Burp Bounty
+Burpsuite pro -> Target -> Select Spidered sites -> right click - select Engagement tools -> Analyze target -> Save report as html file
+Linked Discovery (Automation Tools) - Gospider or Hackcrawler
+amass enum -d officedepot.com
+github dorking
+https://github.com/EdOverflow/can-i-take-over-xyz - to find whether the technology is vulnerable to takeover
+
+Sensitive Information Leaks
+https://github.com/streaak/keyhacks                                          Search Term                        Results Expected
+https://github.com/random-robbie/keywords/blob/master/keywords.txt eg: "company" security_credentials                   LDAP
+                                                                        "company" connectionstring                      Database credentials
+                                                                        "company" JDBC                                  Database credentials
+                                                                        "company" ssh2 _auth_password                   Unauthorized Access to servers
+                                                                        "compnay" send_keys or send,keys                IF other keywords related to passwords fail
+
+
+
+
+
+
+##Extra resources
+https://pentester.land/blog/levelup-2018-the-bug-hunters-methodology-v3/ -- Jason Haddox
+https://pentester.land/blog/mechanizing-the-methodology/
+https://gist.github.com/jhaddix/86a06c5dc309d08580a018c66354a056
+https://github.com/jhaddix/tbhm/blob/master/v4/all2.txt
+https://github.com/jhaddix/tbhm
+https://m0chan.github.io/2019/12/17/Bug-Bounty-Cheetsheet.html
+https://www.yassineaboukir.com//blog/Top-Tier-Bug-bounty-Hunter-Mindset-(BSides-Ahmedadabad-2022-Keynote)/
+https://docs.google.com/presentation/d/15bdwuAJKwhVwlcijKOXZFI5ZTJT1PdcMUblJVu6dJyU/edit#slide=id.gc7305a35cd_0_128 -  PUTTING YOUR MIND TO IT: BUG BOUNTIES FOR 12 MONTHS - ZSeano's NahamCon Talk
+https://github.com/pbscybsec/Mind-Maps
+https://www.goforpost.com/tools/domain-extractor/ - domain extractor
