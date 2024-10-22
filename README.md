@@ -13,7 +13,7 @@ Welcome to **Scribble Note**! This is a personal collection of my bug bounty res
 
 1. **Clone the Repo**:
    ```bash
-   git clone https://github.com/yourusername/scribble-note.git
+   git clone https://github.com/yourusername/My-Scribble-note-for-Bugbounty.git
    ```
 2. **Dive In**: Open the `.txt` files and explore my notes. Feel free to add your own!
 
